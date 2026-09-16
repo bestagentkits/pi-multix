@@ -11,11 +11,13 @@ import { checkTool } from "./tools/check.js";
 import { docTool } from "./tools/doc.js";
 import { imageTool } from "./tools/image.js";
 import { mediaTool } from "./tools/media.js";
+import { modelsTool } from "./tools/models.js";
 import { runTool } from "./tools/run.js";
 import { videoTool } from "./tools/video.js";
 
 const TOOLS = [
   checkTool,
+  modelsTool,
   imageTool,
   videoTool,
   audioTool,

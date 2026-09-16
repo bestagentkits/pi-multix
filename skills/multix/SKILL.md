@@ -21,6 +21,7 @@ report provider errors with the full CLI output, and stream progress.
 | Tool | Use it for |
 |---|---|
 | `multix_check` | Which provider keys, ffmpeg, and ImageMagick are available |
+| `multix_models` | Provider and model inventory, and adding or removing keys safely |
 | `multix_image` | Generate an image, or edit an existing one (i2i) |
 | `multix_video` | Text-to-video, image-to-video, and job status |
 | `multix_audio` | TTS, transcription, music, sound effects, voice cloning |
@@ -41,6 +42,13 @@ retry blindly.
 Keys are read from the process environment, then `<cwd>/.env`, then
 `~/.multix/.env`. Never print, echo, or embed a key value in a prompt, URL, or
 output. If a key is missing, say so and name the provider that needs it.
+
+To add a key, use `multix_models`. Never ask the user to paste a key into the
+chat: tool arguments are written to the pi session log and sent to the model
+provider. Available actions are `providers` (status only, never values),
+`models` (list a provider's real model ids), `scaffold` (write the file with
+placeholders for the user to fill in), and `set-key` / `unset-key` (which accept
+only an environment variable name or a file path, never the secret itself).
 
 ## Provider selection
 
