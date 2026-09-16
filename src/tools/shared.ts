@@ -150,7 +150,7 @@ export function buildVariantArgs(options: {
   const failure = missingRequirement(variant, params);
   if (failure !== null) {
     throw new Error(
-      `${toolName}: ${variantLabel} ${failure}.${variant.note !== undefined ? ` ${variant.note}` : ""}`,
+      `${toolName}: ${variantLabel} ${failure}.${variant.note === undefined ? "" : ` ${variant.note}`}`,
     );
   }
 
@@ -255,6 +255,16 @@ export interface MultixToolSpec<TParams extends TSchema> {
   timeoutMs?: number;
   /** Pure argv builder, excluding common flags. Exported for tests. */
   build: (params: Static<TParams>) => string[];
+  /**
+   * Optional post-success step. Runs only when the CLI exited 0, and any text it
+   * returns is appended to the tool result. Used to reconcile output files whose
+   * real format disagrees with the name the caller asked for.
+   */
+  afterSuccess?: (
+    params: Static<TParams>,
+    result: MultixRunResult,
+    context: { cwd: string },
+  ) => Promise<string | null> | string | null;
 }
 
 /**
@@ -296,15 +306,21 @@ export function defineMultixTool<TParams extends TSchema>(spec: MultixToolSpec<T
         args: argv,
         cwd,
         timeoutMs,
-        ...(signal !== undefined ? { signal } : {}),
+        ...(signal === undefined ? {} : { signal }),
         onOutput: (chunk) => progress(tail(chunk, MAX_STREAM_PREVIEW)),
       });
 
       const text = formatRunResult(result, cwd);
       if (result.exitCode !== 0) throw new Error(text);
 
+      let extra = "";
+      if (spec.afterSuccess !== undefined) {
+        const note = await spec.afterSuccess(typed, result, { cwd });
+        if (note !== null && note !== "") extra = `\n\n${note}`;
+      }
+
       return {
-        content: [{ type: "text", text }],
+        content: [{ type: "text", text: text + extra }],
         details: {
           argv: result.argv,
           phase: "done" as const,
@@ -315,11 +331,13 @@ export function defineMultixTool<TParams extends TSchema>(spec: MultixToolSpec<T
     },
   });
 
-  // `build` and `timeoutMs` are attached for tests and documentation. pi only
-  // reads the ToolDefinition fields, so extra properties are inert at runtime.
+  // `build`, `timeoutMs`, and `afterSuccess` are attached for tests and
+  // documentation. pi only reads the ToolDefinition fields, so extra properties
+  // are inert at runtime.
   return Object.assign(tool, {
     build: spec.build,
     timeoutMs: spec.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    ...(spec.afterSuccess === undefined ? {} : { afterSuccess: spec.afterSuccess }),
   });
 }
 

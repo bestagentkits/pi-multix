@@ -32,6 +32,7 @@ import {
   importSecret,
   isSecretVariable,
   KNOWN_VARIABLES,
+  permissionWarning,
   PROVIDERS,
   PROVIDER_IDS,
   readEnvFile,
@@ -170,6 +171,10 @@ function describeProviders(): string {
       lines.push(`  ${name}  file=${inFile} process.env=${inEnv}  (${kind})`);
     }
   }
+  // A file the user edited by hand inherits their umask, which is often 644.
+  const warning = permissionWarning(snapshot.path);
+  if (warning !== null) lines.push("", warning);
+
   lines.push(
     "",
     "Values are never displayed. Use action=scaffold to create the file with placeholders,",
@@ -197,7 +202,7 @@ async function listModels(
     );
   }
   const kind = params.kind ?? DEFAULT_KIND[provider];
-  const argv = kind !== undefined ? available[kind] : undefined;
+  const argv = kind === undefined ? undefined : available[kind];
   if (argv === undefined) {
     throw new Error(
       `multix_models: ${provider} cannot list kind=${kind}. Available: ${Object.keys(available).join(", ")}.`,
@@ -214,7 +219,7 @@ async function listModels(
     args: full,
     cwd,
     timeoutMs: clampTimeout(common.timeoutMs ?? DEFAULT_TIMEOUT_MS),
-    ...(signal !== undefined ? { signal } : {}),
+    ...(signal === undefined ? {} : { signal }),
   });
   const text = formatRunResult(result, cwd);
   if (result.exitCode !== 0) throw new Error(text);
@@ -235,7 +240,7 @@ function setKey(params: ModelsParams): string {
   const { path, outcome } = importSecret({
     variable,
     value,
-    ...(params.overwrite !== undefined ? { overwrite: params.overwrite } : {}),
+    ...(params.overwrite === undefined ? {} : { overwrite: params.overwrite }),
   });
 
   let consumed = "";
