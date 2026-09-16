@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -9,6 +9,7 @@ import {
   isSecretVariable,
   mentionedVariables,
   parseEnvFile,
+  permissionWarning,
   PROVIDERS,
   PROVIDER_IDS,
   readEnvFile,
@@ -220,6 +221,39 @@ describe("scaffoldEnvFile", () => {
     const second = scaffoldEnvFile(["GEMINI_API_KEY"], path);
     expect(second.placeholders).toEqual([]);
     expect(second.created).toBe(false);
+  });
+});
+
+describe("permissionWarning", () => {
+  it("stays silent for an owner-only file", () => {
+    const path = tempEnvPath();
+    writeEnvFile("GEMINI_API_KEY=abc\n", path);
+    expect(statSync(path).mode & 0o777).toBe(0o600);
+    expect(permissionWarning(path)).toBeNull();
+  });
+
+  it("warns for a group- or world-readable file and gives the fix", () => {
+    const path = tempEnvPath();
+    writeEnvFile("GEMINI_API_KEY=abc\n", path);
+    chmodSync(path, 0o644);
+
+    const warning = permissionWarning(path);
+    expect(warning).not.toBeNull();
+    expect(warning).toContain(path);
+    expect(warning).toMatch(/mode 644/);
+    expect(warning).toMatch(/chmod 600/);
+    expect(warning).toMatch(/chmod 700/);
+  });
+
+  it("warns for a group-readable file too", () => {
+    const path = tempEnvPath();
+    writeEnvFile("GEMINI_API_KEY=abc\n", path);
+    chmodSync(path, 0o640);
+    expect(permissionWarning(path)).not.toBeNull();
+  });
+
+  it("stays silent when the file does not exist", () => {
+    expect(permissionWarning(tempEnvPath())).toBeNull();
   });
 });
 

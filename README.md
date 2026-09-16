@@ -118,6 +118,12 @@ multix_run    args=["leonardo","upscale","<generatedImageId>"]
 
 - **Output location.** Generated files go to `./multix-output/` unless
   `MULTIX_OUTPUT_DIR` or the `output` parameter redirects them.
+- **Output format is detected, not assumed.** Providers choose the container, and
+  the CLI copies those bytes to `output` verbatim, so asking for `out.png` can
+  yield JPEG data under a `.png` name. `multix_image` reads the file's magic bytes
+  and renames a mismatched output to the extension its content actually has,
+  reporting both paths. It does not transcode, and it never overwrites an
+  existing file.
 - **Strict parameters.** A parameter the chosen provider does not support is
   rejected with an error naming the supported set, instead of being dropped
   silently. Use `extraArgs` for anything not modelled.

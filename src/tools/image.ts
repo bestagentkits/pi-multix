@@ -6,8 +6,10 @@
  * an actionable error instead of being silently dropped.
  */
 
+import { isAbsolute, resolve } from "node:path";
 import { StringEnum } from "@earendil-works/pi-ai";
 import { Type, type Static } from "typebox";
+import { normalizeImageExtension } from "../multix/media-type.js";
 import { applyFlags, CommonFields, ensureSupported, defineMultixTool } from "./shared.js";
 
 const PROVIDERS = [
@@ -296,4 +298,29 @@ export const imageTool = defineMultixTool({
   parameters,
   timeoutMs: 600_000,
   build: buildImageArgs,
+  // Providers choose the container, and the CLI copies those bytes to `output`
+  // verbatim, so a request for out.png can yield JPEG data under a .png name.
+  // Report the real path instead of leaving a misleading name behind.
+  afterSuccess: (params, _result, { cwd }) => {
+    const output = params.output?.trim() ?? "";
+    if (output === "") return null;
+
+    const requested = isAbsolute(output) ? output : resolve(cwd, output);
+    const normalized = normalizeImageExtension(requested);
+    if (normalized === null) return null;
+
+    const format = normalized.detected.toUpperCase();
+    if (normalized.blockedByExistingFile) {
+      return [
+        `Note: ${normalized.path} holds ${format} data but its name says otherwise.`,
+        `It was left where it is, because ${normalized.intendedPath} already exists and was not overwritten.`,
+      ].join("\n");
+    }
+    return [
+      `Note: the provider returned ${format}, so the output file was renamed to match its real content.`,
+      `  requested: ${normalized.requestedPath}`,
+      `  actual:    ${normalized.path}`,
+      "Use the actual path; the file was not transcoded, only renamed.",
+    ].join("\n");
+  },
 });

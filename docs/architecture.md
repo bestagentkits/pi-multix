@@ -117,6 +117,26 @@ bundles (`1.3.7` for pi 0.85.1) so schema types match runtime behavior. The
 `typebox` peer dependency is marked optional so npm never installs a second copy
 next to the one pi provides.
 
+## Output files are named by content
+
+A provider chooses the container it returns, and the CLI copies those bytes to
+the `--output` path without transcoding. Asking for `out.png` from a provider
+that returns JPEG therefore produced a `.png` file holding JPEG data, which
+mislabels the file for anything that trusts the extension.
+
+`defineMultixTool` exposes an optional `afterSuccess` hook that runs only after a
+zero exit, and `multix_image` uses it to read the file's magic bytes
+(`src/multix/media-type.ts`) and rename a mismatched output to the extension its
+content actually has. Three constraints are deliberate:
+
+- **Bytes are never touched.** The file is renamed, not transcoded, so no quality
+  is lost and no external tool such as ImageMagick is required.
+- **Nothing is overwritten.** If the correctly named path is already occupied, the
+  file stays where it is and the tool reports the mismatch instead. A rename can
+  therefore never destroy an earlier result.
+- **Only known image extensions are considered**, so a deliberate `.bin` or
+  extension-less output name is left alone.
+
 ## Secrets never cross the tool boundary
 
 `multix_models` manages provider credentials, and its most important design

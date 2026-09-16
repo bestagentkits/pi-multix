@@ -16,7 +16,7 @@
  *    NUL are rejected outright rather than escaped and hoped for.
  */
 
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -250,13 +250,8 @@ export function writeEnvFile(content: string, path = envFilePath()): void {
   }
 }
 
-/**
- * Commented placeholders for variables that are not set yet.
- *
- * Commented lines cannot authenticate anything, so this is safe to run on an
- * existing file: it never changes a value that is already configured.
- */
-export function placeholderBlock(variables: readonly string[]): string {
+/** Commented placeholders for variables that are not set yet. */
+function placeholderBlock(variables: readonly string[]): string {
   const lines = [
     "# pi-multix: fill in keys below, then run multix_check to confirm.",
     "# This file is read by the multix CLI after process.env and <cwd>/.env.",
@@ -268,6 +263,26 @@ export function placeholderBlock(variables: readonly string[]): string {
     lines.push(`# ${name}=${hint}`);
   }
   return lines.join("\n");
+}
+
+/**
+ * A warning when the env file can be read by anyone other than its owner.
+ *
+ * `scaffold` and `set-key` write mode 600, but a user editing the file by hand
+ * inherits their umask, which is commonly 644. A world-readable file of API keys
+ * is worth reporting rather than silently accepting.
+ */
+export function permissionWarning(path = envFilePath()): string | null {
+  if (!existsSync(path)) return null;
+  const mode = statSync(path).mode & 0o777;
+  // Owner-only means no group or other bits set at all.
+  if ((mode & 0o077) === 0) return null;
+  const octal = mode.toString(8).padStart(3, "0");
+  return [
+    `WARNING: ${path} has mode ${octal}, so other users on this machine can read your keys.`,
+    "Fix it with:",
+    `  chmod 600 ${path} && chmod 700 ${dirname(path)}`,
+  ].join("\n");
 }
 
 export interface SecretMutation {
