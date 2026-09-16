@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+multix-output/
+coverage/
+*.log
+.DS_Store
+.pi/tasks/
+.pi/npm/
+.pi/git/
