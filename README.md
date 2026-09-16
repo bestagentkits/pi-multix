@@ -130,6 +130,46 @@ confirms the bundled skill is discoverable.
 Keep the `typebox` devDependency in step with the version pi bundles; the
 [architecture notes](docs/architecture.md) explain why.
 
+## Releasing
+
+Releases publish from CI with no stored npm credential. Pushing a `v*` tag runs
+[`.github/workflows/publish.yml`](.github/workflows/publish.yml), which uses
+npm's [trusted publishing](https://docs.npmjs.com/trusted-publishers/): GitHub
+mints a short-lived OIDC token for the job and the npm CLI exchanges it for a
+publish credential scoped to that run. There is no `NPM_TOKEN` secret anywhere in
+this repository, and npm attaches a provenance attestation automatically.
+
+```bash
+# 1. bump the version in package.json
+# 2. tag it, with the tag matching the version exactly
+git tag -a v0.2.0 -m "pi-multix 0.2.0"
+git push origin v0.2.0
+```
+
+The workflow refuses to publish when the tag and `package.json` version disagree,
+and `npm publish` runs the `prepublishOnly` gate (`npm run verify`) first, so an
+untested release cannot be uploaded.
+
+### One-time setup on npmjs.com
+
+Trusted publishing is configured on the package, not in this repository. npm
+verifies these values only when a publish is attempted, so a typo surfaces as an
+`ENEEDAUTH` failure at release time rather than when saving.
+
+1. Open the package settings for [`pi-multix`](https://www.npmjs.com/package/pi-multix)
+   → **Trusted Publisher**.
+2. Choose **GitHub Actions** and fill in:
+   - **Organization or user**: `bestagentkits`
+   - **Repository**: `pi-multix`
+   - **Workflow filename**: `publish.yml` (filename only, and it is case-sensitive)
+3. Under **Allowed actions**, permit `npm publish`. Leaving it at staged-only
+   blocks a direct publish.
+
+Once a CI release has succeeded, consider tightening the package under
+**Settings → Publishing access** to *Require two-factor authentication and
+disallow tokens*. That does not affect trusted publishing, and it removes the
+long-lived-token path entirely.
+
 ## Design notes
 
 The extension shells out to the `multix` CLI rather than importing its internals.
