@@ -14,6 +14,11 @@
  * present the check adapts instead of failing.
  *
  * Run: npm run build && node scripts/verify-loading.mjs
+ *
+ * Pass a package directory to verify an installed copy instead of this checkout,
+ * which is how a real consumer's install is checked:
+ *
+ *   node scripts/verify-loading.mjs /path/to/node_modules/pi-multix
  */
 
 import { existsSync } from "node:fs";
@@ -21,8 +26,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverAndLoadExtensions, loadSkillsFromDir } from "@earendil-works/pi-coding-agent";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const root = process.argv[2] !== undefined ? resolve(process.argv[2]) : repoRoot;
 const entry = join(root, "dist", "index.js");
+const fromInstalledPackage = root !== repoRoot;
 const EXPECTED_TOOLS = [
   "multix_audio",
   "multix_check",
@@ -46,9 +53,10 @@ function check(name, condition, detail) {
 }
 
 console.log(`pi-multix verification against ${entry}`);
+if (fromInstalledPackage) console.log(`(installed package copy, not the checkout at ${repoRoot})`);
 
 if (!existsSync(entry)) {
-  console.error("dist/index.js is missing. Run `npm run build` first.");
+  console.error(`dist/index.js is missing at ${entry}. Run \`npm run build\` first.`);
   process.exit(1);
 }
 
