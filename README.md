@@ -5,6 +5,8 @@ AI multimodal CLI to the pi coding agent: image generation and editing, video
 generation, speech, transcription, music, sound effects, document conversion, and
 local media processing.
 
+![Isometric engraving-style illustration of the multix CLI: a central processing machine wired to modules for images, video, speech, music, documents, and 3D models](docs/images/multix-isometric-banner.webp)
+
 ## Install
 
 ```bash
