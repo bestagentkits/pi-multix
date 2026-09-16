@@ -36,6 +36,7 @@ const EXPECTED_TOOLS = [
   "multix_doc",
   "multix_image",
   "multix_media",
+  "multix_models",
   "multix_run",
   "multix_video",
 ];

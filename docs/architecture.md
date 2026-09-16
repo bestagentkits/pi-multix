@@ -117,6 +117,43 @@ bundles (`1.3.7` for pi 0.85.1) so schema types match runtime behavior. The
 `typebox` peer dependency is marked optional so npm never installs a second copy
 next to the one pi provides.
 
+## Secrets never cross the tool boundary
+
+`multix_models` manages provider credentials, and its most important design
+constraint is what it refuses to accept.
+
+pi writes tool call arguments into the session log on disk, and every argument is
+also part of the conversation sent to the model provider. A parameter named
+`apiKey` would therefore put a live credential in two places the user does not
+control. The tool has no such parameter, and a test asserts the schema keeps it
+that way (`tests/models-tool.test.ts`).
+
+A key reaches `~/.multix/.env` by one of two routes:
+
+1. **The user stages it.** `action=scaffold` writes the file with commented
+   placeholders at mode `600` and prints a `read -rs` incantation, which keeps the
+   value off the screen and out of shell history.
+2. **The user parks it somewhere this process can already see it** — an exported
+   environment variable, or a file — and passes only `fromEnv` (a variable name)
+   or `fromFile` (a path), optionally with `consume: true` to delete the staging
+   file afterwards.
+
+The value is read, written, and dropped. No code path returns it, so it cannot
+reach a tool result, a session log, or the model.
+
+`src/multix/env-file.ts` holds this logic and is intentionally generic over the
+file path, which is what makes the write path testable without touching the
+user's real configuration. Three details are deliberate:
+
+- **A value containing a line break is rejected, not escaped.** A newline would
+  append an attacker-chosen assignment to the file, which is an injection rather
+  than a formatting problem.
+- **Duplicate assignments of the same variable are collapsed on write.** dotenv
+  lets the last assignment win, so leaving a stale duplicate behind would
+  silently override the new value.
+- **Writes are atomic and owner-only.** A temp file is written at mode `600` and
+  renamed into place, so an interrupted write cannot truncate the file.
+
 ## Verification strategy
 
 Unit tests cover argument mapping, requirement validation, and CLI resolution,

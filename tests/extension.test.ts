@@ -6,13 +6,24 @@ import { checkTool } from "../src/tools/check.js";
 import { docTool } from "../src/tools/doc.js";
 import { imageTool } from "../src/tools/image.js";
 import { mediaTool } from "../src/tools/media.js";
+import { modelsTool } from "../src/tools/models.js";
 import { runTool } from "../src/tools/run.js";
 import { videoTool } from "../src/tools/video.js";
 
-const TOOLS = [checkTool, imageTool, videoTool, audioTool, mediaTool, docTool, runTool] as const;
+const TOOLS = [
+  checkTool,
+  modelsTool,
+  imageTool,
+  videoTool,
+  audioTool,
+  mediaTool,
+  docTool,
+  runTool,
+] as const;
 
 const EXPECTED_NAMES = [
   "multix_check",
+  "multix_models",
   "multix_image",
   "multix_video",
   "multix_audio",
@@ -22,7 +33,7 @@ const EXPECTED_NAMES = [
 ];
 
 describe("extension entry point", () => {
-  it("registers all seven multix tools", () => {
+  it("registers all eight multix tools", () => {
     const registered: string[] = [];
     const fakePi = {
       registerTool: (tool: { name: string }) => {

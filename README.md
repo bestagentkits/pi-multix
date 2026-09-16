@@ -56,6 +56,7 @@ Keys are read from `process.env`, then `<cwd>/.env`, then `~/.multix/.env`:
 | Tool | Purpose |
 |---|---|
 | `multix_check` | Report which provider keys, `ffmpeg`, and ImageMagick are available |
+| `multix_models` | Provider and model inventory, and key management without handling secrets |
 | `multix_image` | Generate an image, or edit an existing one (image-to-image) |
 | `multix_video` | Text-to-video, image-to-video, and async job status |
 | `multix_audio` | TTS, transcription, music, sound effects, voice cloning |
@@ -66,6 +67,37 @@ Keys are read from `process.env`, then `<cwd>/.env`, then `~/.multix/.env`:
 The extension also ships a `multix` skill containing provider-selection decision
 trees and reference behavior, so the agent picks a sensible provider instead of
 guessing.
+
+## Adding an API key
+
+**Never paste a key into the chat.** Tool arguments are written to the pi session
+log on disk and sent to the model provider as part of the conversation, so
+`multix_models` deliberately has **no parameter that accepts a key**. Keys reach
+`~/.multix/.env` by one of two routes instead.
+
+Let a human enter it, without it ever reaching the model:
+
+```bash
+mkdir -p ~/.multix
+# `read -rs` keeps the value off the screen and out of shell history.
+read -rs KEY && printf 'GEMINI_API_KEY=%s\n' "$KEY" >> ~/.multix/.env
+```
+
+Or import it from a file or an already-exported environment variable, passing
+only a name or a path:
+
+```text
+multix_models action=scaffold
+multix_models action=set-key variable=GEMINI_API_KEY fromFile=~/.gemini-key consume=true
+multix_models action=providers
+multix_models action=unset-key variable=GEMINI_API_KEY
+```
+
+`set-key` reports only which variable changed, never the value. The file is
+written atomically with mode `600`, a value cannot contain a line break (which
+would inject another variable), and an existing value is never replaced without
+`overwrite=true`. Run `multix_check` afterwards to confirm the CLI can see it;
+multix reads the file on every invocation, so no restart is needed.
 
 ### Examples
 
