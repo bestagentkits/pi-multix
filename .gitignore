@@ -7,6 +7,7 @@ multix-output/
 coverage/
 *.log
 .DS_Store
-.pi/tasks/
-.pi/npm/
-.pi/git/
+
+# Local pi and test-runner state; not part of the published package.
+.pi/
+.vitest/
