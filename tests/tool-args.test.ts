@@ -37,6 +37,17 @@ describe("multix_image argv", () => {
     ).toEqual(["leonardo", "generate", "a red fox", "--width", "1024"]);
   });
 
+  it("forwards the image-format opt-out", () => {
+    expect(
+      buildImageArgs({
+        action: "generate",
+        provider: "cloudflare",
+        prompt: "a red fox",
+        imageFormat: "original",
+      }),
+    ).toEqual(["cloudflare", "generate", "--prompt", "a red fox", "--image-format", "original"]);
+  });
+
   it("repeats --ref for a multi-reference edit", () => {
     expect(
       buildImageArgs({

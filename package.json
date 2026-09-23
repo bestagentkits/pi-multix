@@ -1,6 +1,6 @@
 {
   "name": "pi-multix",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Pi extension for AI multimodal generation and media processing via the multix CLI: images, video, speech, music, 3D, document conversion, and ffmpeg/ImageMagick optimization.",
   "type": "module",
   "license": "MIT",
@@ -56,7 +56,7 @@
     "prepublishOnly": "npm run verify"
   },
   "dependencies": {
-    "@mrgoonie/multix": "^0.5.2"
+    "@mrgoonie/multix": "^0.6.0"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
