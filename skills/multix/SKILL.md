@@ -104,6 +104,20 @@ or `output` redirects them. The tools print the CLI's stdout, which names the
 files that were written. Report the actual saved path to the user rather than
 guessing a filename, and read the file back when its contents matter.
 
+### Image format (WebP by default)
+
+- Generated and edited images are converted to WebP by default with
+  `cwebp -q 85 -m 6 -metadata none input.png -o output.webp`. Dimensions and
+  transparency are kept, and the CLI verifies both before it reports the file.
+- Check the delivered image before handing it over: open or analyze it when
+  appearance matters, and confirm the reported path ends in `.webp`.
+- Delete only intermediate images you created (for example a PNG you converted
+  yourself). Never delete the user's source or reference images.
+- If the user asks for another format, or to keep the provider's original
+  format/quality, pass `imageFormat: "original"` (or an `output` path with that
+  extension, e.g. `out.png`). A user format request always wins over the default.
+- If `cwebp` is missing, the CLI warns and keeps the original file.
+
 ## Reference behavior worth knowing
 
 - **Refs**: local files are read and inlined as base64; URLs pass through. Allowed

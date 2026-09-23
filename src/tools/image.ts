@@ -90,6 +90,12 @@ const parameters = Type.Object({
   output: Type.Optional(
     Type.String({ description: "Copy the primary output to this path, relative to cwd unless absolute." }),
   ),
+  imageFormat: Type.Optional(
+    Type.Union([Type.Literal("webp"), Type.Literal("original")], {
+      description:
+        "Final image format. Default webp (cwebp -q 85, size and transparency kept). Use original only when the user asks to keep the provider's format/quality or wants another format.",
+    }),
+  ),
   ...CommonFields,
 });
 
@@ -106,6 +112,7 @@ const GENERATE_FLAGS: Record<Provider, Record<string, string>> = {
     format: "--format",
     numImages: "--num-images",
     output: "--output",
+    imageFormat: "--image-format",
   },
   gemini: {
     prompt: "--prompt",
@@ -114,6 +121,7 @@ const GENERATE_FLAGS: Record<Provider, Record<string, string>> = {
     numImages: "--num-images",
     size: "--size",
     output: "--output",
+    imageFormat: "--image-format",
   },
   minimax: {
     prompt: "--prompt",
@@ -121,6 +129,7 @@ const GENERATE_FLAGS: Record<Provider, Record<string, string>> = {
     aspectRatio: "--aspect-ratio",
     numImages: "--num-images",
     output: "--output",
+    imageFormat: "--image-format",
   },
   openrouter: {
     prompt: "--prompt",
@@ -129,6 +138,7 @@ const GENERATE_FLAGS: Record<Provider, Record<string, string>> = {
     imageSize: "--image-size",
     numImages: "--num-images",
     output: "--output",
+    imageFormat: "--image-format",
   },
   // `leonardo generate <prompt>` takes the prompt positionally.
   leonardo: {
@@ -144,6 +154,7 @@ const GENERATE_FLAGS: Record<Provider, Record<string, string>> = {
     ultra: "--ultra",
     noDownload: "--no-download",
     output: "--output",
+    imageFormat: "--image-format",
   },
   byteplus: {
     prompt: "--prompt",
@@ -155,6 +166,7 @@ const GENERATE_FLAGS: Record<Provider, Record<string, string>> = {
     seed: "--seed",
     noWatermark: "--no-watermark",
     output: "--output",
+    imageFormat: "--image-format",
   },
   cloudflare: {
     prompt: "--prompt",
@@ -162,6 +174,7 @@ const GENERATE_FLAGS: Record<Provider, Record<string, string>> = {
     steps: "--steps",
     seed: "--seed",
     output: "--output",
+    imageFormat: "--image-format",
   },
 };
 
@@ -176,12 +189,14 @@ const I2I_FLAGS: Partial<Record<Provider, Record<string, string>>> = {
     quality: "--quality",
     format: "--format",
     output: "--output",
+    imageFormat: "--image-format",
   },
   gemini: {
     prompt: "--prompt",
     refs: "--ref",
     model: "--model",
     output: "--output",
+    imageFormat: "--image-format",
   },
   minimax: {
     prompt: "--prompt",
@@ -190,6 +205,7 @@ const I2I_FLAGS: Partial<Record<Provider, Record<string, string>>> = {
     aspectRatio: "--aspect-ratio",
     numImages: "--num-images",
     output: "--output",
+    imageFormat: "--image-format",
   },
   openrouter: {
     prompt: "--prompt",
@@ -197,6 +213,7 @@ const I2I_FLAGS: Partial<Record<Provider, Record<string, string>>> = {
     model: "--model",
     strength: "--strength",
     output: "--output",
+    imageFormat: "--image-format",
   },
   // `leonardo i2i --ref` takes an existing Leonardo image id, not a file path.
   leonardo: {
@@ -212,6 +229,7 @@ const I2I_FLAGS: Partial<Record<Provider, Record<string, string>>> = {
     negative: "--negative",
     noDownload: "--no-download",
     output: "--output",
+    imageFormat: "--image-format",
   },
   byteplus: {
     prompt: "--prompt",
@@ -223,6 +241,7 @@ const I2I_FLAGS: Partial<Record<Provider, Record<string, string>>> = {
     seed: "--seed",
     noWatermark: "--no-watermark",
     output: "--output",
+    imageFormat: "--image-format",
   },
 };
 
