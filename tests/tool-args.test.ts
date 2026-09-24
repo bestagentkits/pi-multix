@@ -239,6 +239,30 @@ describe("multix_audio argv", () => {
     ]);
   });
 
+  it("passes model, voice, and a style performance direction for gemini tts", () => {
+    expect(
+      buildAudioArgs({
+        action: "tts",
+        provider: "gemini",
+        text: "Have a wonderful day!",
+        model: "gemini-3.8-flash-tts",
+        voice: "voice_narrator",
+        style: "cheerful and friendly",
+      }),
+    ).toEqual([
+      "gemini",
+      "generate-speech",
+      "--text",
+      "Have a wonderful day!",
+      "--model",
+      "gemini-3.8-flash-tts",
+      "--voice",
+      "voice_narrator",
+      "--style",
+      "cheerful and friendly",
+    ]);
+  });
+
   it("emits gemini transcription files last because the option is variadic", () => {
     expect(
       buildAudioArgs({
