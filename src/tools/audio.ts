@@ -47,10 +47,19 @@ const parameters = Type.Object({
   ),
   name: Type.Optional(Type.String({ description: "elevenlabs clone: display name for the new voice." })),
   voice: Type.Optional(
-    Type.String({ description: "Voice id or name. Provider-specific; omit for the provider default." }),
+    Type.String({
+      description:
+        "Voice id or name. Provider-specific; omit for the provider default. Gemini 3.8 tts and " +
+        "flash-lite-tts accept the 30 prebuilt names (Zephyr, Puck, Kore, ...) plus custom voice_... " +
+        "and voicekey_... ids.",
+    }),
   ),
   model: Type.Optional(
-    Type.String({ description: "Provider model id, for example eleven_multilingual_v2 or music_v1." }),
+    Type.String({
+      description:
+        "Provider model id, for example eleven_multilingual_v2 or music_v1. Gemini tts defaults to " +
+        "gemini-3.8-flash-lite-tts; pass gemini-3.8-flash-tts for higher fidelity.",
+    }),
   ),
   emotion: Type.Optional(
     Type.String({
@@ -102,7 +111,14 @@ const parameters = Type.Object({
   ),
   stability: Type.Optional(Type.Number({ description: "elevenlabs tts: voice stability 0..1." })),
   similarityBoost: Type.Optional(Type.Number({ description: "elevenlabs tts: voice similarity boost 0..1." })),
-  style: Type.Optional(Type.Number({ description: "elevenlabs tts: style exaggeration 0..1." })),
+  style: Type.Optional(
+    Type.Union([Type.Number(), Type.String()], {
+      description:
+        "elevenlabs tts: style exaggeration 0..1. gemini tts (3.8 models): a short performance " +
+        'direction such as "cheerful and friendly", applied as speech_metadata; gemini reads text ' +
+        "verbatim, so put delivery direction here, not in text.",
+    }),
+  ),
   seed: Type.Optional(Type.Number({ description: "elevenlabs tts: determinism seed." })),
   durationSeconds: Type.Optional(
     Type.Number({ description: "elevenlabs sfx: target duration, 0.5 to 30 seconds." }),
@@ -150,6 +166,7 @@ const VARIANTS: Record<Action, Partial<Record<Provider, CommandVariant>>> = {
         model: "--model",
         voice: "--voice",
         speaker: "--speaker",
+        style: "--style",
         outputFormat: "--output-format",
         output: "--output",
       },
@@ -305,6 +322,18 @@ export function buildAudioArgs(params: AudioParams): string[] {
       `multix_audio: action=${params.action} is not available for ${params.provider}. ` +
         `Providers supporting ${params.action}: ${available === "" ? "none" : available}.`,
     );
+  }
+
+  if (params.style !== undefined) {
+    if (params.provider === "elevenlabs") {
+      if (typeof params.style !== "number" || Number.isNaN(params.style) || params.style < 0 || params.style > 1) {
+        throw new Error("multix_audio: elevenlabs tts style must be a number between 0 and 1.");
+      }
+    } else if (params.provider === "gemini") {
+      if (typeof params.style !== "string" || params.style.trim() === "") {
+        throw new Error("multix_audio: gemini tts style must be a non-empty string performance direction.");
+      }
+    }
   }
 
   return buildVariantArgs({

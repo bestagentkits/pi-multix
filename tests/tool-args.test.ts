@@ -239,6 +239,30 @@ describe("multix_audio argv", () => {
     ]);
   });
 
+  it("passes model, voice, and a style performance direction for gemini tts", () => {
+    expect(
+      buildAudioArgs({
+        action: "tts",
+        provider: "gemini",
+        text: "Have a wonderful day!",
+        model: "gemini-3.8-flash-tts",
+        voice: "voice_narrator",
+        style: "cheerful and friendly",
+      }),
+    ).toEqual([
+      "gemini",
+      "generate-speech",
+      "--text",
+      "Have a wonderful day!",
+      "--model",
+      "gemini-3.8-flash-tts",
+      "--voice",
+      "voice_narrator",
+      "--style",
+      "cheerful and friendly",
+    ]);
+  });
+
   it("emits gemini transcription files last because the option is variadic", () => {
     expect(
       buildAudioArgs({
@@ -285,6 +309,28 @@ describe("multix_audio argv", () => {
     expect(() =>
       buildAudioArgs({ action: "tts", provider: "cloudflare", text: "hi", voice: "alloy" }),
     ).toThrow(/voice cannot be used with cloudflare generate-speech/);
+  });
+
+  it("rejects a string style for elevenlabs tts", () => {
+    expect(() =>
+      buildAudioArgs({
+        action: "tts",
+        provider: "elevenlabs",
+        text: "hello",
+        style: "cheerful and friendly",
+      }),
+    ).toThrow(/elevenlabs tts style must be a number between 0 and 1/);
+  });
+
+  it("rejects a numeric style for gemini tts", () => {
+    expect(() =>
+      buildAudioArgs({
+        action: "tts",
+        provider: "gemini",
+        text: "hello",
+        style: 0.5,
+      }),
+    ).toThrow(/gemini tts style must be a non-empty string/);
   });
 });
 

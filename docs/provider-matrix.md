@@ -41,6 +41,11 @@ CLI has no command for it.
 
 - `transcribe` takes `input` for openai and elevenlabs, but `files` for gemini.
   Ask for `format srt` or `format vtt` for subtitles.
+- gemini `tts` defaults to `gemini-3.8-flash-lite-tts`; pass `model
+  gemini-3.8-flash-tts` for higher fidelity. Both read `text` verbatim, so use
+  `style` for a performance direction (for example "cheerful and friendly")
+  instead of stage directions in the text. `voice` accepts the prebuilt names
+  or custom `voice_...`/`voicekey_...` ids.
 - gemini transcription and analysis go through the Gemini Files API, so they are
   the choice for understanding video content.
 - `clone` needs one to three minutes of clean sample audio.
