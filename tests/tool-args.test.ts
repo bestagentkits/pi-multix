@@ -310,6 +310,28 @@ describe("multix_audio argv", () => {
       buildAudioArgs({ action: "tts", provider: "cloudflare", text: "hi", voice: "alloy" }),
     ).toThrow(/voice cannot be used with cloudflare generate-speech/);
   });
+
+  it("rejects a string style for elevenlabs tts", () => {
+    expect(() =>
+      buildAudioArgs({
+        action: "tts",
+        provider: "elevenlabs",
+        text: "hello",
+        style: "cheerful and friendly",
+      }),
+    ).toThrow(/elevenlabs tts style must be a number between 0 and 1/);
+  });
+
+  it("rejects a numeric style for gemini tts", () => {
+    expect(() =>
+      buildAudioArgs({
+        action: "tts",
+        provider: "gemini",
+        text: "hello",
+        style: 0.5,
+      }),
+    ).toThrow(/gemini tts style must be a non-empty string/);
+  });
 });
 
 describe("multix_media argv", () => {

@@ -324,6 +324,18 @@ export function buildAudioArgs(params: AudioParams): string[] {
     );
   }
 
+  if (params.style !== undefined) {
+    if (params.provider === "elevenlabs") {
+      if (typeof params.style !== "number" || Number.isNaN(params.style) || params.style < 0 || params.style > 1) {
+        throw new Error("multix_audio: elevenlabs tts style must be a number between 0 and 1.");
+      }
+    } else if (params.provider === "gemini") {
+      if (typeof params.style !== "string" || params.style.trim() === "") {
+        throw new Error("multix_audio: gemini tts style must be a non-empty string performance direction.");
+      }
+    }
+  }
+
   return buildVariantArgs({
     toolName: "multix_audio",
     variantLabel: `${params.provider} ${variant.command.join(" ")}`,
